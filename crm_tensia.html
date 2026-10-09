@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Pro - Tensia Jewelry</title>
+    <style>
+        body { background-color: #F9F9F9; color: #111111; font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
+        header { background: #ffffff; border-b: 1px solid #E5E7EB; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-text { font-size: 24px; font-family: serif; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; }
+        .leyenda { font-size: 11px; background: #E5E7EB; color: #374151; padding: 2px 8px; border-radius: 12px; font-family: monospace; }
+        main { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .card { background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-title { font-size: 11px; text-transform: uppercase; color: #9CA3AF; margin: 0; }
+        .card-value { font-size: 28px; font-weight: 300; margin: 8px 0 0 0; }
+        .seccion-titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .titulo-texto { font-size: 20px; font-family: serif; margin: 0; }
+        .btn-principal { background: #111111; color: #ffffff; font-size: 14px; padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .btn-venta { background: #10B981; color: white; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .kanban-container { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 16px; overflow-x: auto; padding-bottom: 15px; }
+        .kanban-col { background: #EBF0F5; padding: 16px; border-radius: 12px; min-height: 180px; }
+        .col-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #6B7280; margin: 0 0 12px 0; border-bottom: 1px solid #D1D5DB; padding-bottom: 8px; }
+        .joya-card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB; margin-bottom: 10px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-top: 4px; }
+        .badge-nuevo { background: #E5E7EB; color: #374151; }
+        .badge-antiguo { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+        .clientes-box { background: #ffffff; padding: 24px; border-radius: 12px; border: 1px solid #E5E7EB; margin-top: 40px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 15px; }
+        th { background: #F9FAFB; color: #9CA3AF; font-size: 11px; text-transform: uppercase; padding: 12px; }
+        td { padding: 12px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
+        .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span class="logo-text">Tensia</span>
+            <span class="leyenda">Ley 970 - Smart CRM</span>
+        </div>
+        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sistema Híbrido Activo</span></div>
+    </header>
+    <main>
+        <section class="metrics-grid">
+            <div class="card"><p class="card-title">Coleccionistas VIP</p><h3 class="card-value" id="m-clientes">0</h3></div>
+            <div class="card"><p class="card-title">Joyas en Taller</p><h3 class="card-value" id="m-joyas">0</h3></div>
+            <div class="card"><p class="card-title">Ventas Totales</p><h3 class="card-value" id="m-ventas">$0</h3></div>
+        </section>
+        <section>
+            <div class="seccion-titulo">
+                <h2 class="titulo-texto">Flujo de Taller y Fabricación</h2>
+                <button onclick="guardarNuevoCliente()" class="btn-principal">+ Registrar Nuevo Coleccionista</button>
+            </div>
+            <div class="kanban-container">
+                <div class="kanban-col"><p class="col-title">1. Diseño</p><div id="k-diseno"></div></div>
+                <div class="kanban-col"><p class="col-title">2. En Taller</p><div id="k-taller"></div></div>
+                <div class="kanban-col"><p class="col-title">3. Pulido</p><div id="k-pulido"></div></div>
+                <div class="kanban-col"><p class="col-title">4. Listo Entrega</p><div id="k-listo"></div></div>
+                <div class="kanban-col"><p class="col-title">5. Entregado</p><div id="k-entregado"></div></div>
+            </div>
+        </section>
+        <section class="clientes-box">
+            <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+            <table>
+                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acción</th></tr></thead>
+                <tbody id="tabla-clientes-body"></tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        const URL_DB = "https://supabase.co";
+        const KEY_DB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpemlobmdyc292d3JocWF1cmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTkzNTYsImV4cCI6MjEwNzA3NTM1Nn0.DWVhs_lCUxOsXH4YGM38ynXy8mmJnJJGLalNMa5Chps";
+
+        let clientes = JSON.parse(localStorage.getItem('crm_clientes_t')) || [];
+        let ventas = JSON.parse(localStorage.getItem('crm_ventas_t')) || [];
+
+        function actualizarMétricas() {
+            document.getElementById('m-clientes').innerText = clientes.length;
+            document.getElementById('m-joyas').innerText = ventas.filter(v => v.etapa !== '5. Entregado').length;
+            let total = ventas.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
+            document.getElementById('m-ventas').innerText = "\$" + total.toLocaleString('es-CO');
+        }
+
+        function dibujarTablasYKanban() {
+            actualizarMétricas();
+            ['k-diseno', 'k-taller', 'k-pulido', 'k-listo', 'k-entregado'].forEach(id => document.getElementById(id).innerHTML = "");
+            
+            ventas.forEach((v, idx) => {
+                let card = `<div class="joya-card" onclick="avanzarEtapa(${idx})" style="cursor:pointer;" title="Haz clic para avanzar">
+                    <p style="font-weight:bold;margin:0;">${v.pieza}</p>
+                    <p style="font-size:11px;color:#6B7280;margin:2px 0;">Ref: ${v.cliente_nombre}</p>
+                    <span style="font-size:10px;background:#F3F4F6;padding:2px 4px;border-radius:4px;">⚖️ ${v.peso}g</span>
+                    <p style="font-size:11px;margin:4px 0 0 0;color:#10B981;font-weight:bold;">$${parseFloat(v.precio).toLocaleString('es-CO')}</p>
+                </div>`;
+                if(v.etapa === '1. Diseño') document.getElementById('k-diseno').innerHTML += card;
+                if(v.etapa === '2. En Taller') document.getElementById('k-taller').innerHTML += card;
+                if(v.etapa === '3. Pulido') document.getElementById('k-pulido').innerHTML += card;
+                if(v.etapa === '4. Listo') document.getElementById('k-listo').innerHTML += card;
+                if(v.etapa === '5. Entregado') document.getElementById('k-entregado').innerHTML += card;
+            });
+
+            const tbody = document.getElementById('tabla-clientes-body');
+            if(clientes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Aún no hay coleccionistas guardados.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = "";
+            clientes.forEach(c => {
+                let compras = ventas.filter(v => v.cliente_nombre.toLowerCase() === c.nombre_completo.toLowerCase());
+                let badge = compras.length > 0 ? `<span class="badge badge-antiguo">Antiguo (VIP)</span>` : `<span class="badge badge-nuevo">Nuevo</span>`;
+                let historial = compras.length > 0 ? compras.map(v => `<span class="historial-texto">✨ ${v.pieza} (${v.etapa})</span>`).join('') : `<span style="color:#9CA3AF;font-size:11px;font-style:italic;">Ninguna pieza adquirida</span>`;
+                
+                tbody.innerHTML += `<tr>
+                    <td><span style="font-weight:500;">${c.nombre_completo}</span><br>${badge}</td>
+                    <td>${c.ciudad_pais}</td>
+                    <td style="font-size:12px;">📞 ${c.telefono}<br><span style="color:#6B7280">✉️ ${c.email}</span></td>
+                    <td>${historial}</td>
+                    <td><button onclick="registrarVenta('${c.nombre_completo}')" class="btn-venta">🛒 + Venta</button></td>
+                </tr>`;
+            });
+        }
+
+        async function guardarNuevoCliente() {
+            let nom = prompt("Nombre completo:"); if (!nom) return;
+            let ciu = prompt("Ciudad y País:") || 'No especificada';
+            let tel = prompt("Teléfono / WhatsApp:") || 'Sin teléfono';
+            let em  = prompt("Correo electrónico:") || 'Sin correo';
+
+            let nuevo = { nombre_completo: nom, ciudad_pais: ciu, telefono: tel, email: em };
+            clientes.unshift(nuevo);
+            localStorage.setItem('crm_clientes_t', JSON.stringify(clientes));
+            dibujarTablasYKanban();
+
+            try {
+                await fetch(`${URL_DB}/clientes`, {
+                    method: 'POST',
+                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevo)
+                });
+            } catch (e) { console.log("Modo local activo."); }
+        }
+
+        function registrarVenta(clienteNombre) {
+            let pieza = prompt(`¿Qué joya compró ${clienteNombre}?:`); if(!pieza) return;
+            let peso = prompt("¿Peso en gramos de plata?:") || "0";
+            let precio = prompt("¿Precio total (Solo números)?:") || "0";
+
+            let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño' };
+            ventas.unshift(nuevaVenta);
+            localStorage.setItem('crm_ventas_t', JSON.stringify(ventas));
+            dibujarTablasYKanban();
+        }
+
+        function avanzarEtapa(idx) {
+            let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
+            let pos = etapas.indexOf(ventas[idx].etapa);
+            if(pos < etapas.length - 1) {
+                ventas[idx].etapa = etapas[pos + 1];
+                localStorage.setItem('crm_ventas_t', JSON.stringify(ventas));
+                dibujarTablasYKanban();
+            }
+        }
+        window.onload = dibujarTablasYKanban;
+    </script>
+</body>
+</html>
