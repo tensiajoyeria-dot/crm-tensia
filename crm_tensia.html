@@ -14,7 +14,7 @@
         .card { background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .card-title { font-size: 11px; text-transform: uppercase; color: #9CA3AF; margin: 0; }
         .card-value { font-size: 28px; font-weight: 300; margin: 8px 0 0 0; }
-        .seccion-titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .seccion-titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 40px; }
         .titulo-texto { font-size: 20px; font-family: serif; margin: 0; }
         .btn-principal { background: #111111; color: #ffffff; font-size: 14px; padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
         .btn-venta { background: #10B981; color: white; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 4px; }
@@ -33,6 +33,7 @@
         td { padding: 12px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
         .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; border-left: 2px solid #111111; }
         .nota-tag { font-size: 11px; background: #FFFBEB; color: #B45309; padding: 4px; border-radius: 4px; border: 1px dashed #FDE68A; margin-top: 6px; display: block; word-break: break-word; }
+        .fecha-tag { font-size: 10px; color: #6B7280; display: block; margin-top: 4px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -41,14 +42,15 @@
             <span class="logo-text">Tensia</span>
             <span class="leyenda">Ley 970 - Smart CRM</span>
         </div>
-        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización Total Activa</span></div>
+        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización Histórica Activa</span></div>
     </header>
     <main>
         <section class="metrics-grid">
             <div class="card"><p class="card-title">Coleccionistas VIP</p><h3 class="card-value" id="m-clientes">0</h3></div>
-            <div class="card"><p class="card-title">Joyas en Taller</p><h3 class="card-value" id="m-joyas">0</h3></div>
-            <div class="card"><p class="card-title">Ventas Totales</p><h3 class="card-value" id="m-ventas">$0</h3></div>
+            <div class="card"><p class="card-title">Joyas en Proceso (Taller)</p><h3 class="card-value" id="m-joyas">0</h3></div>
+            <div class="card"><p class="card-title">Ventas Totales Históricas</p><h3 class="card-value" id="m-ventas">$0</h3></div>
         </section>
+        
         <section>
             <div class="seccion-titulo">
                 <h2 class="titulo-texto">Flujo de Taller y Fabricación</h2>
@@ -62,6 +64,24 @@
                 <div class="kanban-col"><p class="col-title">5. Entregado</p><div id="k-entregado"></div></div>
             </div>
         </section>
+
+        <section class="clientes-box" style="margin-top: 40px; background: #ffffff;">
+            <h2 class="titulo-texto">📚 Libro de Ventas Histórico (Piezas Entregadas)</h2>
+            <p style="font-size: 13px; color: #6B7280; margin: 5px 0 15px 0;">Registro cronológico de todas las piezas finalizadas y despachadas.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha de Entrega</th>
+                        <th>Coleccionista</th>
+                        <th>Joya / Pieza</th>
+                        <th>Peso (g)</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-historial-ventas"></tbody>
+            </table>
+        </section>
+
         <section class="clientes-box">
             <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
             <table>
@@ -77,6 +97,12 @@
         let clientes = [];
         let ventas = [];
 
+        function formatearFecha(isoString) {
+            if(!isoString) return "Sin fecha";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
         function actualizarMétricas() {
             document.getElementById('m-clientes').innerText = clientes.length;
             document.getElementById('m-joyas').innerText = ventas.filter(v => v.etapa !== '5. Entregado').length;
@@ -90,12 +116,15 @@
             
             ventas.forEach((v) => {
                 let notaHtml = v.notas ? `<span class="nota-tag">📝 ${v.notas}</span>` : '';
+                let fechaHtml = v.fecha_entrega ? `<span class="fecha-tag">📦 Entregado: ${formatearFecha(v.fecha_entrega)}</span>` : '';
+                
                 let card = `<div class="joya-card" onclick="gestionarPieza(${v.id}, '${v.etapa}', '${v.pieza.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Gestionar pieza">
                     <p style="font-weight:bold;margin:0;">${v.pieza}</p>
                     <p style="font-size:11px;color:#6B7280;margin:2px 0;">Ref: ${v.cliente_nombre}</p>
                     <span style="font-size:10px;background:#F3F4F6;padding:2px 4px;border-radius:4px;">⚖️ ${v.peso}g</span>
                     <p style="font-size:11px;margin:4px 0 0 0;color:#10B981;font-weight:bold;">$${parseFloat(v.precio || 0).toLocaleString('es-CO')}</p>
                     ${notaHtml}
+                    ${fechaHtml}
                 </div>`;
                 
                 if(v.etapa === '1. Diseño') document.getElementById('k-diseno').innerHTML += card;
@@ -104,6 +133,24 @@
                 if(v.etapa === '4. Listo') document.getElementById('k-listo').innerHTML += card;
                 if(v.etapa === '5. Entregado') document.getElementById('k-entregado').innerHTML += card;
             });
+
+            const tablaHistorial = document.getElementById('tabla-historial-ventas');
+            let entregados = ventas.filter(v => v.etapa === '5. Entregado').sort((a,b) => new Date(b.fecha_entrega) - new Date(a.fecha_entrega));
+            
+            if(entregados.length === 0) {
+                tablaHistorial.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">No hay ventas entregadas registradas.</td></tr>`;
+            } else {
+                tablaHistorial.innerHTML = "";
+                entregados.forEach(v => {
+                    tablaHistorial.innerHTML += `<tr>
+                        <td style="font-weight:500;color:#374151;">📅 ${formatearFecha(v.fecha_entrega)}</td>
+                        <td>👤 ${v.cliente_nombre}</td>
+                        <td style="font-weight:bold;">✨ ${v.pieza}</td>
+                        <td>⚖️ ${v.peso}g</td>
+                        <td style="color:#10B981;font-weight:bold;">$${parseFloat(v.precio || 0).toLocaleString('es-CO')}</td>
+                    </tr>`;
+                });
+            }
 
             const tbody = document.getElementById('tabla-clientes-body');
             if(clientes.length === 0) {
@@ -128,7 +175,6 @@
                 </tr>`;
             });
         }
-
         async function inicializarCargarDatos() {
             try {
                 let resC = await fetch(`${URL_DB}/clientes?select=*&order=id.desc`, { headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } });
@@ -155,9 +201,7 @@
                     headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(nuevo)
                 });
-                if(response.ok) {
-                    inicializarCargarDatos();
-                }
+                if(response.ok) inicializarCargarDatos();
             } catch (e) { alert("Error de red."); }
         }
 
@@ -167,7 +211,7 @@
             let precio = prompt("¿Precio total (Solo números)?:") || "0";
             let notas = prompt("Notas o especificaciones del diseño (opcional):") || "";
 
-            let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño', notas: notas };
+            let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño', notas: notas, fecha_entrega: null };
 
             try {
                 let response = await fetch(`${URL_DB}/pedidos_ventas`, {
@@ -175,9 +219,7 @@
                     headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(nuevaVenta)
                 });
-                if(response.ok) {
-                    inicializarCargarDatos();
-                }
+                if(response.ok) inicializarCargarDatos();
             } catch (e) { alert("Error al conectar con la base de datos."); }
         }
 
@@ -187,12 +229,25 @@
             if (opcion === "1") {
                 let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
                 let pos = etapas.indexOf(etapaActual);
-                if(pos < etapas.length - 1) actualizarCampoPieza(idJoya, { etapa: etapas[pos + 1] });
+                if(pos < etapas.length - 1) {
+                    let nuevaEtapa = etapas[pos + 1];
+                    let datosActualizar = { etapa: nuevaEtapa };
+                    if(nuevaEtapa === '5. Entregado') {
+                        datosActualizar.fecha_entrega = new Date().toISOString();
+                    }
+                    actualizarCampoPieza(idJoya, datosActualizar);
+                }
             } 
             else if (opcion === "2") {
                 let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
                 let pos = etapas.indexOf(etapaActual);
-                if(pos > 0) actualizarCampoPieza(idJoya, { etapa: etapas[pos - 1] });
+                if(pos > 0) {
+                    let datosActualizar = { etapa: etapas[pos - 1] };
+                    if(etapaActual === '5. Entregado') {
+                        datosActualizar.fecha_entrega = null;
+                    }
+                    actualizarCampoPieza(idJoya, datosActualizar);
+                }
             } 
             else if (opcion === "3") {
                 let nuevaNota = prompt("Escribe la nota para esta pieza:");
