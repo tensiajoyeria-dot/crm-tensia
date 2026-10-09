@@ -38,7 +38,7 @@
             <span class="logo-text">Tensia</span>
             <span class="leyenda">Ley 970 - Smart CRM</span>
         </div>
-        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sistema Híbrido Activo</span></div>
+        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización en Nube Activa</span></div>
     </header>
     <main>
         <section class="metrics-grid">
@@ -68,7 +68,7 @@
         </section>
     </main>
     <script>
-        const URL_DB = "https://supabase.co";
+        const URL_DB = "https://uizihngrsovwrhqaurgl.supabase.co";
         const KEY_DB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpemlobmdyc292d3JocWF1cmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTkzNTYsImV4cCI6MjEwNzA3NTM1Nn0.DWVhs_lCUxOsXH4YGM38ynXy8mmJnJJGLalNMa5Chps";
 
         let clientes = JSON.parse(localStorage.getItem('crm_clientes_t')) || [];
@@ -86,7 +86,7 @@
             ['k-diseno', 'k-taller', 'k-pulido', 'k-listo', 'k-entregado'].forEach(id => document.getElementById(id).innerHTML = "");
             
             ventas.forEach((v, idx) => {
-                let card = `<div class="joya-card" onclick="avanzarEtapa(${idx})" style="cursor:pointer;" title="Haz clic para avanzar">
+                let card = `<div class="joya-card" onclick="avanzarEtapa(${idx})" style="cursor:pointer;">
                     <p style="font-weight:bold;margin:0;">${v.pieza}</p>
                     <p style="font-size:11px;color:#6B7280;margin:2px 0;">Ref: ${v.cliente_nombre}</p>
                     <span style="font-size:10px;background:#F3F4F6;padding:2px 4px;border-radius:4px;">⚖️ ${v.peso}g</span>
@@ -101,7 +101,7 @@
 
             const tbody = document.getElementById('tabla-clientes-body');
             if(clientes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Aún no hay coleccionistas guardados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Cargando directorio...</td></tr>`;
                 return;
             }
             tbody.innerHTML = "";
@@ -118,6 +118,20 @@
                     <td><button onclick="registrarVenta('${c.nombre_completo}')" class="btn-venta">🛒 + Venta</button></td>
                 </tr>`;
             });
+        }
+
+        async function inicializarCargarDatos() {
+            try {
+                let resC = await fetch(`${URL_DB}/clientes?select=*`, { headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } });
+                if(resC.ok) {
+                    let datosC = await resC.json();
+                    if(datosC.length > 0) {
+                        clientes = datosC;
+                        localStorage.setItem('crm_clientes_t', JSON.stringify(clientes));
+                    }
+                }
+            } catch(e) { console.log("Carga usando datos de respaldo locales."); }
+            dibujarTablasYKanban();
         }
 
         async function guardarNuevoCliente() {
@@ -137,13 +151,13 @@
                     headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(nuevo)
                 });
-            } catch (e) { console.log("Modo local activo."); }
+            } catch (e) { console.log("Modo local temporal."); }
         }
 
         function registrarVenta(clienteNombre) {
             let pieza = prompt(`¿Qué joya compró ${clienteNombre}?:`); if(!pieza) return;
-            let peso = prompt("¿Peso en gramos de plata?:") || "0";
-            let precio = prompt("¿Precio total (Solo números)?:") || "0";
+            let peso = prompt("¿Peso en gramos?:") || "0";
+            let precio = prompt("¿Precio (Solo números)?:") || "0";
 
             let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño' };
             ventas.unshift(nuevaVenta);
@@ -160,7 +174,7 @@
                 dibujarTablasYKanban();
             }
         }
-        window.onload = dibujarTablasYKanban;
+        window.onload = inicializarCargarDatos;
     </script>
 </body>
 </html>
