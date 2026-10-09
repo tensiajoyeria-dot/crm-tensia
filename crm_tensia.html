@@ -34,6 +34,8 @@
         .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; border-left: 2px solid #111111; }
         .nota-tag { font-size: 11px; background: #FFFBEB; color: #B45309; padding: 4px; border-radius: 4px; border: 1px dashed #FDE68A; margin-top: 6px; display: block; word-break: break-word; }
         .fecha-tag { font-size: 10px; color: #6B7280; display: block; margin-top: 4px; font-style: italic; }
+        .input-busqueda { width: 100%; max-width: 350px; padding: 10px 14px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 8px; margin-top: 15px; box-sizing: border-box; outline: none; }
+        .input-busqueda:focus { border-color: #111111; box-shadow: 0 0 0 2px rgba(17,17,17,0.05); }
     </style>
 </head>
 <body>
@@ -83,7 +85,14 @@
         </section>
 
         <section class="clientes-box">
-            <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+                    <p style="font-size: 13px; color: #6B7280; margin: 4px 0 0 0;">Gestión completa de contactos y asignación de piezas.</p>
+                </div>
+                <!-- Barra de búsqueda interactiva -->
+                <input type="text" id="buscar-cliente" onkeyup="dibujarTablasYKanban()" placeholder="🔍 Buscar por nombre, ciudad o teléfono..." class="input-busqueda">
+            </div>
             <table>
                 <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acciones</th></tr></thead>
                 <tbody id="tabla-clientes-body"></tbody>
@@ -115,7 +124,7 @@
             ['k-diseno', 'k-taller', 'k-pulido', 'k-listo', 'k-entregado'].forEach(id => document.getElementById(id).innerHTML = "");
             
             ventas.forEach((v) => {
-                let notaHtml = v.notas ? `<span class="nota-tag">📝 ${v.notas}</span>` : '';
+                let notaHtml = v.notes || v.notas ? `<span class="nota-tag">📝 ${v.notes || v.notas}</span>` : '';
                 let fechaHtml = v.fecha_entrega ? `<span class="fecha-tag">📦 Entregado: ${formatearFecha(v.fecha_entrega)}</span>` : '';
                 
                 let card = `<div class="joya-card" onclick="gestionarPieza(${v.id}, '${v.etapa}', '${v.pieza.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Gestionar pieza">
@@ -152,13 +161,24 @@
                 });
             }
 
+            // Lógica de filtrado de clientes en tiempo real
+            const query = document.getElementById('buscar-cliente').value.toLowerCase();
             const tbody = document.getElementById('tabla-clientes-body');
-            if(clientes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Aún no tienes coleccionistas guardados.</td></tr>`;
+            
+            let clientesFiltrados = clientes.filter(c => {
+                return c.nombre_completo.toLowerCase().includes(query) || 
+                       c.ciudad_pais.toLowerCase().includes(query) || 
+                       c.telefono.toLowerCase().includes(query) ||
+                       c.email.toLowerCase().includes(query);
+            });
+
+            if(clientesFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">No se encontraron coleccionistas que coincidan con la búsqueda.</td></tr>`;
                 return;
             }
+            
             tbody.innerHTML = "";
-            clientes.forEach(c => {
+            clientesFiltrados.forEach(c => {
                 let compras = ventas.filter(v => v.cliente_nombre.toLowerCase() === c.nombre_completo.toLowerCase());
                 let badge = compras.length > 0 ? `<span class="badge badge-antiguo">Antiguo (VIP)</span>` : `<span class="badge badge-nuevo">Nuevo</span>`;
                 let historial = compras.length > 0 ? compras.map(v => `<span class="historial-texto">✨ ${v.pieza} (${v.etapa})</span>`).join('') : `<span style="color:#9CA3AF;font-size:11px;font-style:italic;">Ninguna pieza adquirida</span>`;
