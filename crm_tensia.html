@@ -68,7 +68,8 @@
         </section>
     </main>
     <script>
-        const URL_DB = "https://uizihngrsovwrhqaurgl.supabase.co";
+        // URL Corregida con el punto de enlace REST directo de la plataforma
+        const URL_DB = "https://supabase.co";
         const KEY_DB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpemlobmdyc292d3JocWF1cmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTkzNTYsImV4cCI6MjEwNzA3NTM1Nn0.DWVhs_lCUxOsXH4YGM38ynXy8mmJnJJGLalNMa5Chps";
 
         let clientes = JSON.parse(localStorage.getItem('crm_clientes_t')) || [];
@@ -101,7 +102,7 @@
 
             const tbody = document.getElementById('tabla-clientes-body');
             if(clientes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Cargando directorio...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">Cargando directorio unificado...</td></tr>`;
                 return;
             }
             tbody.innerHTML = "";
@@ -112,7 +113,7 @@
                 
                 tbody.innerHTML += `<tr>
                     <td><span style="font-weight:500;">${c.nombre_completo}</span><br>${badge}</td>
-                    <td>${c.ciudad_pais}</td>
+                    <td>${c.ciudad_pais || 'No especificada'}</td>
                     <td style="font-size:12px;">📞 ${c.telefono}<br><span style="color:#6B7280">✉️ ${c.email}</span></td>
                     <td>${historial}</td>
                     <td><button onclick="registrarVenta('${c.nombre_completo}')" class="btn-venta">🛒 + Venta</button></td>
@@ -122,7 +123,9 @@
 
         async function inicializarCargarDatos() {
             try {
-                let resC = await fetch(`${URL_DB}/clientes?select=*`, { headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } });
+                let resC = await fetch(`${URL_DB}/clientes?select=*&order=id.desc`, { 
+                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } 
+                });
                 if(resC.ok) {
                     let datosC = await resC.json();
                     if(datosC.length > 0) {
@@ -130,7 +133,7 @@
                         localStorage.setItem('crm_clientes_t', JSON.stringify(clientes));
                     }
                 }
-            } catch(e) { console.log("Carga usando datos de respaldo locales."); }
+            } catch(e) { console.log("Usando datos locales."); }
             dibujarTablasYKanban();
         }
 
@@ -141,17 +144,30 @@
             let em  = prompt("Correo electrónico:") || 'Sin correo';
 
             let nuevo = { nombre_completo: nom, ciudad_pais: ciu, telefono: tel, email: em };
+            
+            // Guardado temporal local inmediato
             clientes.unshift(nuevo);
             localStorage.setItem('crm_clientes_t', JSON.stringify(clientes));
             dibujarTablasYKanban();
 
             try {
-                await fetch(`${URL_DB}/clientes`, {
+                let response = await fetch(`${URL_DB}/clientes`, {
                     method: 'POST',
-                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
+                    headers: { 
+                        'apikey': KEY_DB, 
+                        'Authorization': `Bearer ${KEY_DB}`, 
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
                     body: JSON.stringify(nuevo)
                 });
-            } catch (e) { console.log("Modo local temporal."); }
+                if(response.ok) {
+                    alert("¡Coleccionista " + nom + " guardado con éxito en la nube!");
+                    inicializarCargarDatos();
+                } else {
+                    console.log("Error al sincronizar con la nube.");
+                }
+            } catch (e) { console.log("Guardado local."); }
         }
 
         function registrarVenta(clienteNombre) {
