@@ -17,11 +17,13 @@
         .seccion-titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .titulo-texto { font-size: 20px; font-family: serif; margin: 0; }
         .btn-principal { background: #111111; color: #ffffff; font-size: 14px; padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
-        .btn-venta { background: #10B981; color: white; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .btn-venta { background: #10B981; color: white; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-right: 4px; }
+        .btn-borrar { background: #EF4444; color: white; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; }
         .kanban-container { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 16px; overflow-x: auto; padding-bottom: 15px; }
         .kanban-col { background: #EBF0F5; padding: 16px; border-radius: 12px; min-height: 180px; }
         .col-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #6B7280; margin: 0 0 12px 0; border-bottom: 1px solid #D1D5DB; padding-bottom: 8px; }
-        .joya-card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB; margin-bottom: 10px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .joya-card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB; margin-bottom: 10px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .joya-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-top: 4px; }
         .badge-nuevo { background: #E5E7EB; color: #374151; }
         .badge-antiguo { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
@@ -29,7 +31,8 @@
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 15px; }
         th { background: #F9FAFB; color: #9CA3AF; font-size: 11px; text-transform: uppercase; padding: 12px; }
         td { padding: 12px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
-        .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; }
+        .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; border-left: 2px solid #111111; }
+        .nota-tag { font-size: 11px; background: #FFFBEB; color: #B45309; padding: 4px; border-radius: 4px; border: 1px dashed #FDE68A; margin-top: 6px; display: block; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -62,7 +65,7 @@
         <section class="clientes-box">
             <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
             <table>
-                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acciones</th></tr></thead>
                 <tbody id="tabla-clientes-body"></tbody>
             </table>
         </section>
@@ -86,11 +89,13 @@
             ['k-diseno', 'k-taller', 'k-pulido', 'k-listo', 'k-entregado'].forEach(id => document.getElementById(id).innerHTML = "");
             
             ventas.forEach((v) => {
-                let card = `<div class="joya-card" onclick="avanzarEtapa(${v.id}, '${v.etapa}')" style="cursor:pointer;" title="Haz clic para avanzar de etapa">
+                let notaHtml = v.notas ? `<span class="nota-tag">📝 ${v.notas}</span>` : '';
+                let card = `<div class="joya-card" onclick="gestionarPieza(${v.id}, '${v.etapa}', '${v.pieza.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="Gestionar pieza">
                     <p style="font-weight:bold;margin:0;">${v.pieza}</p>
                     <p style="font-size:11px;color:#6B7280;margin:2px 0;">Ref: ${v.cliente_nombre}</p>
                     <span style="font-size:10px;background:#F3F4F6;padding:2px 4px;border-radius:4px;">⚖️ ${v.peso}g</span>
                     <p style="font-size:11px;margin:4px 0 0 0;color:#10B981;font-weight:bold;">$${parseFloat(v.precio || 0).toLocaleString('es-CO')}</p>
+                    ${notaHtml}
                 </div>`;
                 
                 if(v.etapa === '1. Diseño') document.getElementById('k-diseno').innerHTML += card;
@@ -116,7 +121,10 @@
                     <td>${c.ciudad_pais}</td>
                     <td style="font-size:12px;">📞 ${c.telefono}<br><span style="color:#6B7280">✉️ ${c.email}</span></td>
                     <td>${historial}</td>
-                    <td><button onclick="registrarVenta('${c.nombre_completo}')" class="btn-venta">🛒 + Venta</button></td>
+                    <td>
+                        <button onclick="registrarVenta('${c.nombre_completo}')" class="btn-venta">🛒 + Venta</button>
+                        <button onclick="eliminarCliente(${c.id}, '${c.nombre_completo}')" class="btn-borrar">🗑️</button>
+                    </td>
                 </tr>`;
             });
         }
@@ -148,7 +156,6 @@
                     body: JSON.stringify(nuevo)
                 });
                 if(response.ok) {
-                    alert("¡Coleccionista " + nom + " guardado con éxito!");
                     inicializarCargarDatos();
                 }
             } catch (e) { alert("Error de red."); }
@@ -157,54 +164,76 @@
         async function registrarVenta(clienteNombre) {
             let pieza = prompt(`¿Qué joya compró ${clienteNombre}?:`); if(!pieza) return;
             let peso = prompt("¿Peso en gramos de plata?:") || "0";
-            let precio = prompt("¿Precio total (Solo números, ej: 150000)?:") || "0";
+            let precio = prompt("¿Precio total (Solo números)?:") || "0";
+            let notas = prompt("Notas o especificaciones del diseño (opcional):") || "";
 
-            let nuevaVenta = { 
-                cliente_nombre: clienteNombre, 
-                pieza: pieza, 
-                peso: peso, 
-                precio: precio, 
-                etapa: '1. Diseño' 
-            };
+            let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño', notas: notas };
 
             try {
                 let response = await fetch(`${URL_DB}/pedidos_ventas`, {
                     method: 'POST',
-                    headers: { 
-                        'apikey': KEY_DB, 
-                        'Authorization': `Bearer ${KEY_DB}`, 
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    },
+                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify(nuevaVenta)
                 });
                 if(response.ok) {
-                    alert("¡Pieza registrada en taller con éxito!");
                     inicializarCargarDatos();
-                } else {
-                    let errLog = await response.json();
-                    alert("Error de Supabase: " + JSON.stringify(errLog));
                 }
             } catch (e) { alert("Error al conectar con la base de datos."); }
         }
 
-        async function avanzarEtapa(idJoya, etapaActual) {
-            let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
-            let pos = etapas.indexOf(etapaActual);
-            if(pos < etapas.length - 1) {
-                let nuevaEtapa = etapas[pos + 1];
-                try {
-                    let response = await fetch(`${URL_DB}/pedidos_ventas?id=eq.${idJoya}`, {
-                        method: 'PATCH',
-                        headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ etapa: nuevaEtapa })
-                    });
-                    if(response.ok) {
-                        inicializarCargarDatos();
-                    }
-                } catch (e) { console.log("Error al mover la pieza."); }
+        async function gestionarPieza(idJoya, etapaActual, nombrePieza) {
+            let opcion = prompt(`Gestionar "${nombrePieza}"\n\nEscribe el NÚMERO de lo que deseas hacer:\n1. Avanzar etapa\n2. Retroceder etapa\n3. Cambiar/Agregar Nota\n4. Eliminar pieza del taller`);
+            
+            if (opcion === "1") {
+                let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
+                let pos = etapas.indexOf(etapaActual);
+                if(pos < etapas.length - 1) actualizarCampoPieza(idJoya, { etapa: etapas[pos + 1] });
+            } 
+            else if (opcion === "2") {
+                let etapas = ['1. Diseño', '2. En Taller', '3. Pulido', '4. Listo', '5. Entregado'];
+                let pos = etapas.indexOf(etapaActual);
+                if(pos > 0) actualizarCampoPieza(idJoya, { etapa: etapas[pos - 1] });
+            } 
+            else if (opcion === "3") {
+                let nuevaNota = prompt("Escribe la nota para esta pieza:");
+                if (nuevaNota !== null) actualizarCampoPieza(idJoya, { notas: nuevaNota });
+            } 
+            else if (opcion === "4") {
+                if(confirm(`¿Estás seguro de eliminar la pieza "${nombrePieza}" permanentemente?`)) {
+                    try {
+                        let response = await fetch(`${URL_DB}/pedidos_ventas?id=eq.${idJoya}`, {
+                            method: 'DELETE',
+                            headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` }
+                        });
+                        if(response.ok) inicializarCargarDatos();
+                    } catch (e) { console.log("Error al eliminar."); }
+                }
             }
         }
+
+        async function actualizarCampoPieza(idJoya, objetoCambio) {
+            try {
+                let response = await fetch(`${URL_DB}/pedidos_ventas?id=eq.${idJoya}`, {
+                    method: 'PATCH',
+                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(objetoCambio)
+                });
+                if(response.ok) inicializarCargarDatos();
+            } catch (e) { console.log("Error al actualizar la pieza."); }
+        }
+
+        async function eliminarCliente(idCliente, nombre) {
+            if(confirm(`¿Deseas eliminar al cliente "${nombre}"? Esto no borrará sus pedidos actuales.`)) {
+                try {
+                    let response = await fetch(`${URL_DB}/clientes?id=eq.${idCliente}`, {
+                        method: 'DELETE',
+                        headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` }
+                    });
+                    if(response.ok) inicializarCargarDatos();
+                } catch(e) { alert("Error al eliminar cliente."); }
+            }
+        }
+
         window.onload = inicializarCargarDatos;
     </script>
 </body>
