@@ -90,8 +90,9 @@
                     <p style="font-weight:bold;margin:0;">${v.pieza}</p>
                     <p style="font-size:11px;color:#6B7280;margin:2px 0;">Ref: ${v.cliente_nombre}</p>
                     <span style="font-size:10px;background:#F3F4F6;padding:2px 4px;border-radius:4px;">⚖️ ${v.peso}g</span>
-                    <p style="font-size:11px;margin:4px 0 0 0;color:#10B981;font-weight:bold;">$${parseFloat(v.precio).toLocaleString('es-CO')}</p>
+                    <p style="font-size:11px;margin:4px 0 0 0;color:#10B981;font-weight:bold;">$${parseFloat(v.precio || 0).toLocaleString('es-CO')}</p>
                 </div>`;
+                
                 if(v.etapa === '1. Diseño') document.getElementById('k-diseno').innerHTML += card;
                 if(v.etapa === '2. En Taller') document.getElementById('k-taller').innerHTML += card;
                 if(v.etapa === '3. Pulido') document.getElementById('k-pulido').innerHTML += card;
@@ -122,11 +123,9 @@
 
         async function inicializarCargarDatos() {
             try {
-                // Carga de Clientes
                 let resC = await fetch(`${URL_DB}/clientes?select=*&order=id.desc`, { headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } });
                 if(resC.ok) clientes = await resC.json();
 
-                // Carga de Ventas y Joyas
                 let resV = await fetch(`${URL_DB}/pedidos_ventas?select=*&order=id.desc`, { headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}` } });
                 if(resV.ok) ventas = await resV.json();
 
@@ -158,21 +157,35 @@
         async function registrarVenta(clienteNombre) {
             let pieza = prompt(`¿Qué joya compró ${clienteNombre}?:`); if(!pieza) return;
             let peso = prompt("¿Peso en gramos de plata?:") || "0";
-            let precio = prompt("¿Precio total (Solo números)?:") || "0";
+            let precio = prompt("¿Precio total (Solo números, ej: 150000)?:") || "0";
 
-            let nuevaVenta = { cliente_nombre: clienteNombre, pieza: pieza, peso: peso, precio: precio, etapa: '1. Diseño' };
+            let nuevaVenta = { 
+                cliente_nombre: clienteNombre, 
+                pieza: pieza, 
+                peso: peso, 
+                precio: precio, 
+                etapa: '1. Diseño' 
+            };
 
             try {
                 let response = await fetch(`${URL_DB}/pedidos_ventas`, {
                     method: 'POST',
-                    headers: { 'apikey': KEY_DB, 'Authorization': `Bearer ${KEY_DB}`, 'Content-Type': 'application/json' },
+                    headers: { 
+                        'apikey': KEY_DB, 
+                        'Authorization': `Bearer ${KEY_DB}`, 
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
                     body: JSON.stringify(nuevaVenta)
                 });
                 if(response.ok) {
                     alert("¡Pieza registrada en taller con éxito!");
                     inicializarCargarDatos();
+                } else {
+                    let errLog = await response.json();
+                    alert("Error de Supabase: " + JSON.stringify(errLog));
                 }
-            } catch (e) { alert("Error al guardar la venta."); }
+            } catch (e) { alert("Error al conectar con la base de datos."); }
         }
 
         async function avanzarEtapa(idJoya, etapaActual) {
