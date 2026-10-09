@@ -6,7 +6,7 @@
     <title>CRM Pro - Tensia Jewelry</title>
     <style>
         body { background-color: #F9F9F9; color: #111111; font-family: -apple-system, sans-serif; margin: 0; padding: 0; }
-        header { background: #ffffff; border-b: 1px solid #E5E7EB; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
+        header { background: #ffffff; border-bottom: 1px solid #E5E7EB; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; }
         .logo-text { font-size: 24px; font-family: serif; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; }
         .leyenda { font-size: 11px; background: #E5E7EB; color: #374151; padding: 2px 8px; border-radius: 12px; font-family: monospace; }
         main { max-width: 1200px; margin: 0 auto; padding: 30px; }
@@ -21,7 +21,7 @@
         .kanban-container { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 16px; overflow-x: auto; padding-bottom: 15px; }
         .kanban-col { background: #EBF0F5; padding: 16px; border-radius: 12px; min-height: 180px; }
         .col-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #6B7280; margin: 0 0 12px 0; border-bottom: 1px solid #D1D5DB; padding-bottom: 8px; }
-        .joya-card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB; margin-bottom: 10px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .joya-card { background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB; margin-bottom: 10px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; }
         .badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-top: 4px; }
         .badge-nuevo { background: #E5E7EB; color: #374151; }
         .badge-antiguo { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
@@ -30,6 +30,9 @@
         th { background: #F9FAFB; color: #9CA3AF; font-size: 11px; text-transform: uppercase; padding: 12px; }
         td { padding: 12px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
         .historial-texto { font-size: 11px; color: #6B7280; margin-top: 4px; background: #F9FAFB; padding: 4px; border-radius: 4px; display: block; }
+        .search-bar { width: 100%; max-width: 300px; padding: 8px 12px; border-radius: 8px; border: 1px solid #E5E7EB; font-size: 14px; }
+        .modal-form { display: none; background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #E5E7EB; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .modal-form input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; }
     </style>
 </head>
 <body>
@@ -38,7 +41,7 @@
             <span class="logo-text">Tensia</span>
             <span class="leyenda">Ley 970 - Smart CRM</span>
         </div>
-        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización en Nube Activa</span></div>
+        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización Inteligente Activa</span></div>
     </header>
     <main>
         <section class="metrics-grid">
@@ -46,10 +49,21 @@
             <div class="card"><p class="card-title">Joyas en Taller</p><h3 class="card-value" id="m-joyas">0</h3></div>
             <div class="card"><p class="card-title">Ventas Totales</p><h3 class="card-value" id="m-ventas">$0</h3></div>
         </section>
+
+        <!-- FORMULARIO INTEGRADO (Abre dinámicamente) -->
+        <div id="form-cliente-box" class="modal-form">
+            <input type="text" id="f-nombre" placeholder="Nombre completo">
+            <input type="text" id="f-ciudad" placeholder="Ciudad y País">
+            <input type="text" id="f-telefono" placeholder="WhatsApp / Teléfono">
+            <input type="text" id="f-email" placeholder="Correo electrónico">
+            <button onclick="procesarNuevoCliente()" class="btn-principal" style="padding:8px 15px;">Guardar</button>
+            <button onclick="toggleForm()" class="btn-venta" style="background:#EF4444;padding:8px 15px;">Cancelar</button>
+        </div>
+
         <section>
             <div class="seccion-titulo">
-                <h2 class="titulo-texto">Flujo de Taller y Fabricación</h2>
-                <button onclick="guardarNuevoCliente()" class="btn-principal">+ Registrar Nuevo Coleccionista</button>
+                <h2 class="titulo-texto">Flujo de Taller y Fabricación (Kanban)</h2>
+                <button onclick="toggleForm()" class="btn-principal">+ Registrar Nuevo Coleccionista</button>
             </div>
             <div class="kanban-container">
                 <div class="kanban-col"><p class="col-title">1. Diseño</p><div id="k-diseno"></div></div>
@@ -59,10 +73,14 @@
                 <div class="kanban-col"><p class="col-title">5. Entregado</p><div id="k-entregado"></div></div>
             </div>
         </section>
+
         <section class="clientes-box">
-            <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+                <input type="text" id="crm-buscador" class="search-bar" placeholder="🔍 Buscar por nombre..." oninput="dibujarTablasYKanban()">
+            </div>
             <table>
-                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas de Autor</th><th>Acción</th></tr></thead>
                 <tbody id="tabla-clientes-body"></tbody>
             </table>
         </section>
