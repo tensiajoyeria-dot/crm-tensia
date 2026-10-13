@@ -36,75 +36,125 @@
         .fecha-tag { font-size: 10px; color: #6B7280; display: block; margin-top: 4px; font-style: italic; }
         .input-busqueda { width: 100%; max-width: 350px; padding: 10px 14px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 8px; margin-top: 15px; box-sizing: border-box; outline: none; }
         .input-busqueda:focus { border-color: #111111; box-shadow: 0 0 0 2px rgba(17,17,17,0.05); }
+        
+        /* Capa de protección de Login */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111111; display: flex; justify-content: center; align-items: center; z-index: 9999; color: #ffffff; }
+        .login-box { background: #ffffff; color: #111111; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-input { width: 100%; padding: 12px; margin: 20px 0 15px 0; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 16px; text-align: center; box-sizing: border-box; outline: none; }
     </style>
 </head>
 <body>
-    <header>
-        <div style="display:flex; align-items:center; gap:12px;">
-            <span class="logo-text">Tensia</span>
-            <span class="leyenda">Ley 970 - Smart CRM</span>
+    <!-- Pantalla de bloqueo de seguridad -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <span style="font-family: serif; font-size: 28px; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; display:block; margin-bottom: 5px;">Tensia</span>
+            <p style="font-size: 12px; color: #6B7280; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Acceso Protegido CRM</p>
+            <input type="password" id="input-password" class="login-input" placeholder="Introduce la clave de acceso" onkeypress="evaluarTecla(event)">
+            <button onclick="verificarAcceso()" class="btn-principal" style="width: 100%;">Desbloquear Panel</button>
         </div>
-        <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Sincronización Histórica Activa</span></div>
-    </header>
-    <main>
-        <section class="metrics-grid">
-            <div class="card"><p class="card-title">Coleccionistas VIP</p><h3 class="card-value" id="m-clientes">0</h3></div>
-            <div class="card"><p class="card-title">Joyas en Proceso (Taller)</p><h3 class="card-value" id="m-joyas">0</h3></div>
-            <div class="card"><p class="card-title">Ventas Totales Históricas</p><h3 class="card-value" id="m-ventas">$0</h3></div>
-        </section>
-        
-        <section>
-            <div class="seccion-titulo">
-                <h2 class="titulo-texto">Flujo de Taller y Fabricación</h2>
-                <button onclick="guardarNuevoCliente()" class="btn-principal">+ Registrar Nuevo Coleccionista</button>
-            </div>
-            <div class="kanban-container">
-                <div class="kanban-col"><p class="col-title">1. Diseño</p><div id="k-diseno"></div></div>
-                <div class="kanban-col"><p class="col-title">2. En Taller</p><div id="k-taller"></div></div>
-                <div class="kanban-col"><p class="col-title">3. Pulido</p><div id="k-pulido"></div></div>
-                <div class="kanban-col"><p class="col-title">4. Listo Entrega</p><div id="k-listo"></div></div>
-                <div class="kanban-col"><p class="col-title">5. Entregado</p><div id="k-entregado"></div></div>
-            </div>
-        </section>
+    </div>
 
-        <section class="clientes-box" style="margin-top: 40px; background: #ffffff;">
-            <h2 class="titulo-texto">📚 Libro de Ventas Histórico (Piezas Entregadas)</h2>
-            <p style="font-size: 13px; color: #6B7280; margin: 5px 0 15px 0;">Registro cronológico de todas las piezas finalizadas y despachadas.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha de Entrega</th>
-                        <th>Coleccionista</th>
-                        <th>Joya / Pieza</th>
-                        <th>Peso (g)</th>
-                        <th>Valor Total</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-historial-ventas"></tbody>
-            </table>
-        </section>
-
-        <section class="clientes-box">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
-                <div>
-                    <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
-                    <p style="font-size: 13px; color: #6B7280; margin: 4px 0 0 0;">Gestión completa de contactos y asignación de piezas.</p>
+    <!-- El contenido del CRM empieza totalmente oculto -->
+    <div id="content-crm" style="display: none;">
+        <header>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span class="logo-text">Tensia</span>
+                <span class="leyenda">Ley 970 - Encrypted CRM</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="status"><span style="width:10px; height:10px; background:#10B981; border-radius:50%; display:inline-block;"></span><span>Panel Seguro</span></div>
+                <button onclick="cerrarSesion()" style="background: none; border: none; color: #EF4444; font-size: 12px; cursor: pointer; font-weight: 500;">🔒 Cerrar Sesión</button>
+            </div>
+        </header>
+        <main>
+            <section class="metrics-grid">
+                <div class="card"><p class="card-title">Coleccionistas VIP</p><h3 class="card-value" id="m-clientes">0</h3></div>
+                <div class="card"><p class="card-title">Joyas en Proceso (Taller)</p><h3 class="card-value" id="m-joyas">0</h3></div>
+                <div class="card"><p class="card-title">Ventas Totales Históricas</p><h3 class="card-value" id="m-ventas">$0</h3></div>
+            </section>
+            
+            <section>
+                <div class="seccion-titulo">
+                    <h2 class="titulo-texto">Flujo de Taller y Fabricación</h2>
+                    <button onclick="guardarNuevoCliente()" class="btn-principal">+ Registrar Nuevo Coleccionista</button>
                 </div>
-                <!-- Barra de búsqueda interactiva -->
-                <input type="text" id="buscar-cliente" onkeyup="dibujarTablasYKanban()" placeholder="🔍 Buscar por nombre, ciudad o teléfono..." class="input-busqueda">
-            </div>
-            <table>
-                <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acciones</th></tr></thead>
-                <tbody id="tabla-clientes-body"></tbody>
-            </table>
-        </section>
-    </main>
+                <div class="kanban-container">
+                    <div class="kanban-col"><p class="col-title">1. Diseño</p><div id="k-diseno"></div></div>
+                    <div class="kanban-col"><p class="col-title">2. En Taller</p><div id="k-taller"></div></div>
+                    <div class="kanban-col"><p class="col-title">3. Pulido</p><div id="k-pulido"></div></div>
+                    <div class="kanban-col"><p class="col-title">4. Listo Entrega</p><div id="k-listo"></div></div>
+                    <div class="kanban-col"><p class="col-title">5. Entregado</p><div id="k-entregado"></div></div>
+                </div>
+            </section>
+
+            <section class="clientes-box" style="margin-top: 40px; background: #ffffff;">
+                <h2 class="titulo-texto">📚 Libro de Ventas Histórico (Piezas Entregadas)</h2>
+                <p style="font-size: 13px; color: #6B7280; margin: 5px 0 15px 0;">Registro cronológico de todas las piezas finalizadas y despachadas.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha de Entrega</th>
+                            <th>Coleccionista</th>
+                            <th>Joya / Pieza</th>
+                            <th>Peso (g)</th>
+                            <th>Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-historial-ventas"></tbody>
+                </table>
+            </section>
+
+            <section class="clientes-box">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 class="titulo-texto">Directorio de Coleccionistas VIP</h2>
+                        <p style="font-size: 13px; color: #6B7280; margin: 4px 0 0 0;">Gestión completa de contactos y asignación de piezas.</p>
+                    </div>
+                    <input type="text" id="buscar-cliente" onkeyup="dibujarTablasYKanban()" placeholder="🔍 Buscar por nombre, ciudad o teléfono..." class="input-busqueda">
+                </div>
+                <table>
+                    <thead><tr><th>Nombre y Tipo</th><th>Ciudad / País</th><th>Contacto</th><th>Historial de Joyas</th><th>Acciones</th></tr></thead>
+                    <tbody id="tabla-clientes-body"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
     <script>
+        // Tu Contraseña Maestra (La puedes cambiar aquí si lo deseas en el futuro)
+        const CLAVE_CORRECTA = "Tensia2026"; 
+
         const URL_DB = "https://uizihngrsovwrhqaurgl.supabase.co/rest/v1/";
         const KEY_DB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpemlobmdyc292d3JocWF1cmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTkzNTYsImV4cCI6MjEwNzA3NTM1Nn0.DWVhs_lCUxOsXH4YGM38ynXy8mmJnJJGLalNMa5Chps";
 
         let clientes = [];
         let ventas = [];
+
+        function verificarAcceso() {
+            const passIntroducida = document.getElementById("input-password").value;
+            if(passIntroducida === CLAVE_CORRECTA) {
+                localStorage.setItem("sesion_tensia", "activa");
+                document.getElementById("login-overlay").style.display = "none";
+                document.getElementById("content-crm").style.display = "block";
+                inicializarCargarDatos();
+            } else {
+                alert("Contraseña incorrecta. Acceso denegado.");
+            }
+        }
+
+        function evaluarTecla(e) { if(e.key === 'Enter') verificarAcceso(); }
+
+        function cerrarSesion() {
+            localStorage.removeItem("sesion_tensia");
+            window.location.reload();
+        }
+
+        function comprobarSesionExistente() {
+            if(localStorage.getItem("sesion_tensia") === "activa") {
+                document.getElementById("login-overlay").style.display = "none";
+                document.getElementById("content-crm").style.display = "block";
+                inicializarCargarDatos();
+            }
+        }
 
         function formatearFecha(isoString) {
             if(!isoString) return "Sin fecha";
@@ -161,7 +211,6 @@
                 });
             }
 
-            // Lógica de filtrado de clientes en tiempo real
             const query = document.getElementById('buscar-cliente').value.toLowerCase();
             const tbody = document.getElementById('tabla-clientes-body');
             
@@ -173,7 +222,7 @@
             });
 
             if(clientesFiltrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">No se encontraron coleccionistas que coincidan con la búsqueda.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#9CA3AF;font-style:italic;">No se encontraron coleccionistas.</td></tr>`;
                 return;
             }
             
@@ -309,7 +358,8 @@
             }
         }
 
-        window.onload = inicializarCargarDatos;
+        // Ejecutar comprobación automática al abrir el navegador
+        window.onload = comprobarSesionExistente;
     </script>
 </body>
 </html>
