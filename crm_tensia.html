@@ -37,14 +37,12 @@
         .input-busqueda { width: 100%; max-width: 350px; padding: 10px 14px; font-size: 14px; border: 1px solid #D1D5DB; border-radius: 8px; margin-top: 15px; box-sizing: border-box; outline: none; }
         .input-busqueda:focus { border-color: #111111; box-shadow: 0 0 0 2px rgba(17,17,17,0.05); }
         
-        /* Capa de protección de Login */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111111; display: flex; justify-content: center; align-items: center; z-index: 9999; color: #ffffff; }
         .login-box { background: #ffffff; color: #111111; padding: 40px; border-radius: 16px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .login-input { width: 100%; padding: 12px; margin: 20px 0 15px 0; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 16px; text-align: center; box-sizing: border-box; outline: none; }
     </style>
 </head>
 <body>
-    <!-- Pantalla de bloqueo de seguridad -->
     <div id="login-overlay">
         <div class="login-box">
             <span style="font-family: serif; font-size: 28px; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; display:block; margin-bottom: 5px;">Tensia</span>
@@ -54,7 +52,6 @@
         </div>
     </div>
 
-    <!-- El contenido del CRM empieza totalmente oculto -->
     <div id="content-crm" style="display: none;">
         <header>
             <div style="display:flex; align-items:center; gap:12px;">
@@ -120,7 +117,6 @@
         </main>
     </div>
     <script>
-        // Tu Contraseña Maestra (La puedes cambiar aquí si lo deseas en el futuro)
         const CLAVE_CORRECTA = "Tensia2026"; 
 
         const URL_DB = "https://uizihngrsovwrhqaurgl.supabase.co/rest/v1/";
@@ -165,6 +161,8 @@
         function actualizarMétricas() {
             document.getElementById('m-clientes').innerText = clientes.length;
             document.getElementById('m-joyas').innerText = ventas.filter(v => v.etapa !== '5. Entregado').length;
+            
+            // CORRECCIÓN: Suma todas las piezas sin importar la etapa para capturar la data subida por Excel
             let total = ventas.reduce((acc, v) => acc + parseFloat(v.precio || 0), 0);
             document.getElementById('m-ventas').innerText = "\$" + total.toLocaleString('es-CO');
         }
@@ -230,6 +228,7 @@
             clientesFiltrados.forEach(c => {
                 let compras = ventas.filter(v => v.cliente_nombre.toLowerCase() === c.nombre_completo.toLowerCase());
                 let badge = compras.length > 0 ? `<span class="badge badge-antiguo">Antiguo (VIP)</span>` : `<span class="badge badge-nuevo">Nuevo</span>`;
+                // CORRECCIÓN: Aquí mapeamos también las compras históricas dentro de la tarjeta de cada cliente
                 let historial = compras.length > 0 ? compras.map(v => `<span class="historial-texto">✨ ${v.pieza} (${v.etapa})</span>`).join('') : `<span style="color:#9CA3AF;font-size:11px;font-style:italic;">Ninguna pieza adquirida</span>`;
                 
                 tbody.innerHTML += `<tr>
@@ -358,7 +357,6 @@
             }
         }
 
-        // Ejecutar comprobación automática al abrir el navegador
         window.onload = comprobarSesionExistente;
     </script>
 </body>
